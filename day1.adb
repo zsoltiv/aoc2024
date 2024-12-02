@@ -1,21 +1,22 @@
 with Ada.Text_IO; use Ada.Text_IO;
+with Ada.Strings; use Ada.Strings; -- needed for `Backward`
+with Ada.Strings.Unbounded;
 with Ada.Command_Line;
 with Ada.Containers.Vectors;
 with Ada.Strings.Unbounded;
 with Ada.Strings.Fixed;
-with Ada.Strings; use Ada.Strings; -- needed for `Backward`
 
 with Utils; use Utils;
 
 procedure Day1 is
+    package U_Str renames Ada.Strings.Unbounded;
+    package F_Str renames Ada.Strings.Fixed;
     package CLI renames Ada.Command_Line;
     package Containers renames Ada.Containers;
     package Natural_Vecs is new Containers.Vectors
         (Element_Type => Natural,
          Index_Type => Natural);
     package Natural_Vecs_Sorting is new Natural_Vecs.Generic_Sorting;
-    package U_Str renames Ada.Strings.Unbounded;
-    package F_Str renames Ada.Strings.Fixed;
 
     F : File_Type;
     Left : Natural_Vecs.Vector;
