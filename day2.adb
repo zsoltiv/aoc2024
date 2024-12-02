@@ -14,69 +14,84 @@ procedure Day2 is
         (Element_Type => Natural,
          Index_Type => Natural);
 
+    function Is_Safe (Report : in Natural_Vecs.Vector) return Boolean
+    is
+        Iteration : Positive := 1;
+        Diff : Integer := 0;
+        Prev : Natural := 0;
+        Ascending : Boolean;
+    begin
+        for Level of Report loop
+            if Iteration = 2 then
+                Diff := Integer (Level) - Integer (Prev);
+                if abs Diff > 3 then
+                    return false;
+                end if;
+                if Diff > 0 then
+                    Ascending := true;
+                elsif Diff < 0 then
+                    Ascending := false;
+                else
+                    return false;
+                end if;
+            elsif Iteration > 2 then
+                Diff := Integer (Level) - Integer (Prev);
+                if abs Diff > 3 or
+                   Diff = 0 or
+                   (Ascending and Diff < 0) or
+                   (not Ascending and Diff > 0) then
+                    return false;
+                end if;
+            end if;
+            Prev := Level;
+            Iteration := Iteration + 1;
+        end loop;
+        return true;
+    end;
+
     F : File_Type;
     Line : U_Str.Unbounded_String := U_Str.Null_Unbounded_String;
-    -- my input contains no zeroes, so this will do for initial values
-    N : Natural := 0;
-    Prev : Natural := 0;
     Safe : Natural := 0;
+    Dampened_Safe : Natural := 0;
 begin
     if CLI.Argument_Count = 0 then
         return;
     end if;
-    -- open file at last arg
     Open (F, In_File, CLI.Argument (CLI.Argument_Count));
+
     while not End_Of_File (F) loop
         Line := Next_Line (F);
-        -- check safety
+
         declare
             S : String := U_Str.To_String (Line);
             Prev_Position : Natural := S'First;
-            Iters : Natural := 1;
-            Ascending : Boolean;
-            Is_Safe : Boolean := true;
+            Levels : Natural_Vecs.Vector;
         begin
             while Prev_Position <= S'Last loop
-                N := Next_Natural (S, Prev_Position);
-                if Iters = 2 then
-                    declare
-                        Diff : Integer := Integer (N) - Integer (Prev);
-                    begin
-                        if abs Diff <= 3 then
-                            if Diff > 0 then
-                                Ascending := true;
-                            elsif Diff < 0 then
-                                Ascending := false;
-                            else
-                                Is_Safe := false;
-                                exit;
-                            end if;
-                        else
-                            Is_Safe := false;
-                            exit;
-                        end if;
-                    end;
-                elsif Iters > 2 then
-                    declare
-                        Diff : Integer := Integer (N) - Integer (Prev);
-                    begin
-                        if abs Diff > 3 or
-                           Diff = 0 or
-                           (Ascending and Diff < 0) or
-                           (not Ascending and Diff > 0) then
-                            Is_Safe := false;
-                            exit;
-                        end if;
-                    end;
-                end if;
-                Prev := N;
-                Iters := Iters + 1;
+                Levels.Append (Next_Natural (S, Prev_Position));
             end loop;
-
-            if Is_Safe then
+            if not Is_Safe (Levels) then
+                for Ignored_Idx in Levels.First_Index .. Levels.Last_Index loop
+                    declare
+                        Used_Levels : Natural_Vecs.Vector;
+                    begin
+                        for Level_Idx in Levels.First_Index .. Levels.Last_Index loop
+                            if Level_Idx /= Ignored_Idx then
+                                Used_Levels.Append (Levels (Level_Idx));
+                            end if;
+                        end loop;
+                        if Is_Safe (Used_Levels) then
+                            Dampened_Safe := Dampened_Safe + 1;
+                            exit;
+                        end if;
+                    end;
+                end loop;
+            else
                 Safe := Safe + 1;
+                Dampened_Safe := Dampened_Safe + 1;
             end if;
         end;
     end loop;
     Put_Line (Safe'Image);
+    Put_Line (Dampened_Safe'Image);
 end Day2;
