@@ -5,6 +5,8 @@ with Ada.Strings.Unbounded;
 with Ada.Strings.Fixed;
 with Ada.Strings; use Ada.Strings; -- needed for `Backward`
 
+with Utils; use Utils;
+
 procedure Day1 is
     package CLI renames Ada.Command_Line;
     package Containers renames Ada.Containers;
@@ -14,24 +16,6 @@ procedure Day1 is
     package Natural_Vecs_Sorting is new Natural_Vecs.Generic_Sorting;
     package U_Str renames Ada.Strings.Unbounded;
     package F_Str renames Ada.Strings.Fixed;
-
-    function Next_Line (F : in File_Type) return U_Str.Unbounded_String
-    is
-        Line : U_Str.Unbounded_String := U_Str.Null_Unbounded_String;
-        Buffer : String (1 .. 80);
-        Last : Natural;
-    begin
-        Read_Line:
-        loop
-            Get_Line (F, Buffer, Last);
-            U_Str.Append (Source => Line,
-                          New_Item => Buffer (1 .. Last));
-            exit Read_Line when Last < Buffer'Last
-                             or End_Of_File (F);
-        end loop Read_Line;
-
-        return Line;
-    end Next_Line;
 
     F : File_Type;
     Left : Natural_Vecs.Vector;
