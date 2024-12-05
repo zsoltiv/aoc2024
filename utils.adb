@@ -1,8 +1,10 @@
 with Ada.Strings.Unbounded;
 with Ada.Strings; use Ada.Strings; -- needed for `Backward`
 with Ada.Text_IO; use Ada.Text_IO;
+with Ada.Strings.Maps;
 
 package body Utils is
+    package Maps renames Ada.Strings.Maps;
     function Next_Line (F : in File_Type) return U_Str.Unbounded_String
     is
         Line : U_Str.Unbounded_String := U_Str.Null_Unbounded_String;
@@ -21,13 +23,45 @@ package body Utils is
         return Line;
     end Next_Line;
 
+    function Next_Positive (S : in String; Previous_Position : in out Natural) return Natural
+    is
+        Numerics : constant  Maps.Character_Set := Maps.To_Set ("0123456789");
+        Start_Idx, End_Idx : Natural;
+    begin
+        if Previous_Position = S'Last + 1 then
+            return 0;
+        end if;
+        Start_Idx := F_Str.Index (Source => S,
+                                  Set => Numerics,
+                                  Test => Inside,
+                                  From => Previous_Position);
+        if Start_Idx = 0 then
+            return 0;
+        end if;
+
+        End_Idx := F_Str.Index (Source => S,
+                                Set => Numerics,
+                                Test => Outside,
+                                From => Start_Idx);
+        if End_Idx = 0 then
+            Previous_Position := S'Last + 1;
+            return Natural'Value(S (Start_Idx .. S'Last));
+        else
+            Previous_Position := End_Idx;
+            return Natural'Value(S (Start_Idx .. End_Idx - 1));
+        end if;
+    end;
+
     function Next_Natural (S : in String; Previous_Position : in out Natural) return Natural
     is
+        Numerics : constant  Maps.Character_Set := Maps.To_Set ("0123456789");
         End_Idx : Natural := F_Str.Index (Source => S,
-                                          Pattern => " ",
+                                          Set => Numerics,
+                                          Test => Outside,
                                           From => Previous_Position);
         Ret : Natural;
     begin
+        Put_Line (End_Idx'Image);
         -- end of S
         if End_Idx = 0 then
             Ret := Natural'Value (S (Previous_Position .. S'Last));
@@ -105,22 +139,38 @@ package body Utils is
                         Column (Row_Idx) := Line (Column_Idx);
                     end;
                 end loop;
-                Put_Line (Column);
+                --Put_Line (Column);
                 Occurences := Occurences + Forward_Count  (Column, Word);
                 Occurences := Occurences + Backward_Count (Column, Word);
             end loop;
         end;
         -- upper-left to lower-right and back
         Put_Line ("UP LEFT TO LOW RIGHT 1st" & Occurences'Image);
-        for Start_Idx in Word'Length .. Lines.Last_Index loop
+        for I in Lines.First_Index .. Lines.Last_Index loop
             declare
-                S : String (Lines.First_Index .. Start_Idx);
+                S : String (Lines.First_Index .. I);
             begin
-                for I in Lines.First_Index .. Start_Idx loop
+                for J in Lines.First_Index .. I loop
                     declare
-                        Line : String := Lines.Element (I);
+                        Line : String := Lines.Element (J);
                     begin
-                        S (I) := Line (Start_Idx - I + S'First);
+                        S (J) := Line (I - J + Line'First);
+                    end;
+                end loop;
+                Put_line (S);
+                Occurences := Occurences + Forward_Count  (S, Word);
+                Occurences := Occurences + Backward_Count (S, Word);
+            end;
+        end loop;
+        for I in Lines.First_Index + 1 .. Lines.Last_Index loop
+            declare
+                S : String (Lines.First_Index .. I);
+            begin
+                for J in reverse Lines.First_Index .. I loop
+                    declare
+                        Line : String := Lines.Element (J);
+                    begin
+                        S (J) := Line (I - J + Line'First);
                     end;
                 end loop;
                 Put_line (S);
@@ -142,7 +192,7 @@ package body Utils is
                         S (I - Start_Idx + S'First) := Line (Line'Last - Start_Idx + Line'First);
                     end;
                 end loop;
-                Put_line (S);
+                --Put_line (S);
                 Occurences := Occurences + Forward_Count  (S, Word);
                 Occurences := Occurences + Backward_Count (S, Word);
             end;
@@ -160,7 +210,7 @@ package body Utils is
                         S (I) := Line (Start_Idx + I - S'First);
                     end;
                 end loop;
-                Put_Line (S);
+                --Put_Line (S);
                 Occurences := Occurences + Forward_Count  (S, Word);
                 Occurences := Occurences + Backward_Count (S, Word);
             end;
@@ -178,7 +228,7 @@ package body Utils is
                         S (Lines.Last_Index - I + Lines.First_Index) := Line (I);
                     end;
                 end loop;
-                Put_Line (S);
+                --Put_Line (S);
                 Occurences := Occurences + Forward_Count  (S, Word);
                 Occurences := Occurences + Backward_Count (S, Word);
             end;

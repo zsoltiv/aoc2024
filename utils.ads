@@ -14,6 +14,7 @@ package Utils is
         (Element_Type => Natural,
          Index_Type => Positive);
     package Natural_Vecs_Sorting is new Natural_Vecs.Generic_Sorting;
+
     -- used for vec of fixed strings
     package Line_Vector is new Containers.Indefinite_Vectors
         (Index_Type => Positive, -- match `String` index type
@@ -22,6 +23,7 @@ package Utils is
 
     function Next_Line (F : in File_Type) return U_Str.Unbounded_String;
     function Next_Natural (S : in String; Previous_Position : in out Natural) return Natural;
+    function Next_Positive (S : in String; Previous_Position : in out Natural) return Natural;
     function Reverse_String (S : in String) return String;
     function Line_Vector_Count (Lines : in Line_Vector.Vector; Word : in String) return Natural;
 end Utils;
